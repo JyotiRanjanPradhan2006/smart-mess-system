@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-2">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">👥</div>
+      <div class="fw-bold fs-4">{{ total_students }}</div>
+      <div class="text-muted small">Students</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">⏳</div>
+      <div class="fw-bold fs-4 text-warning">{{ pending_approvals }}</div>
+      <div class="text-muted small">Pending Approval</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">🚫</div>
+      <div class="fw-bold fs-4 text-danger">{{ blocked_cards }}</div>
+      <div class="text-muted small">Blocked Cards</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">🍽️</div>
+      <div class="fw-bold fs-4">{{ today_meals }}</div>
+      <div class="text-muted small">Today's Bookings</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">💰</div>
+      <div class="fw-bold fs-5 text-success">₹{{ month_revenue|floatformat:0 }}</div>
+      <div class="text-muted small">Month Revenue</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">⚠️</div>
+      <div class="fw-bold fs-5 text-danger">₹{{ total_pending|floatformat:0 }}</div>
+      <div class="text-muted small">Total Pending</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3"><i class="fas fa-bolt me-2" style="color:#e65100;"></i>Quick Actions</h6>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'approve_students' %}" class="btn fw-semibold" style="background:#fff3e0;color:#e65100;border-radius:10px;">
+            <i class="fas fa-user-check me-1"></i>Approve Students
+            {% if pending_approvals > 0 %}<span class="badge bg-danger ms-1">{{ pending_approvals }}</span>{% endif %}
+          </a>
+          <a href="{% url 'menu_management' %}" class="btn fw-semibold" style="background:#e8f5e9;color:#2e7d32;border-radius:10px;">
+            <i class="fas fa-utensils me-1"></i>Manage Menu
+          </a>
+          <a href="{% url 'admin_billing' %}" class="btn fw-semibold" style="background:#e3f2fd;color:#1565c0;border-radius:10px;">
+            <i class="fas fa-rupee-sign me-1"></i>Billing
+          </a>
+          <a href="{% url 'revenue_dashboard' %}" class="btn fw-semibold" style="background:#f3e5f5;color:#6a1b9a;border-radius:10px;">
+            <i class="fas fa-chart-bar me-1"></i>Revenue
+          </a>
+          <a href="{% url 'scan_qr' %}" class="btn fw-semibold" style="background:#fce4ec;color:#880e4f;border-radius:10px;">
+            <i class="fas fa-qrcode me-1"></i>Scan QR
+          </a>
+          <a href="/admin/" class="btn fw-semibold" style="background:#f5f5f5;color:#333;border-radius:10px;">
+            <i class="fas fa-cog me-1"></i>System Admin
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

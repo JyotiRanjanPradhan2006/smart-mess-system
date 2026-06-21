@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}All Students{% endblock %}
+{% block page_title %}All Approved Students{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm" style="border-radius:16px;">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table mess-table mb-0">
+        <thead>
+          <tr><th>Roll No.</th><th>Name</th><th>Dept.</th><th>Card</th><th>Pending ₹</th><th>Paid ₹</th></tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td><span class="badge bg-light text-dark border">{{ s.roll_number }}</span></td>
+            <td class="fw-semibold">{{ s.user.get_full_name }}</td>
+            <td class="small text-muted">{{ s.department|default:"—" }}</td>
+            <td>
+              <span class="badge rounded-pill px-2
+                {% if s.card_status == 'blocked' %}bg-danger{% else %}bg-success{% endif %}">
+                {{ s.card_status }}
+              </span>
+            </td>
+            <td class="{% if s.pending_amount > 0 %}text-danger fw-semibold{% endif %}">
+              ₹{{ s.pending_amount|floatformat:2 }}
+            </td>
+            <td class="text-success">₹{{ s.paid_amount|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

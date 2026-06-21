@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Meal History{% endblock %}
+{% block page_title %}Meal History{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-3" style="border-radius:16px;">
+  <div class="card-body py-2">
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+      <label class="fw-semibold small mb-0">Filter:</label>
+      <select name="month" class="form-select form-select-sm" style="width:auto;">
+        {% for m, mname in months %}
+        <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ mname }}</option>
+        {% endfor %}
+      </select>
+      <select name="year" class="form-select form-select-sm" style="width:auto;">
+        {% for y in year_range %}
+        <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm fw-semibold" style="background:#e65100;color:#fff;border-radius:8px;">
+        <i class="fas fa-search me-1"></i>View
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius:16px;">
+  <div class="card-body p-0">
+    {% if bookings %}
+    <div class="table-responsive">
+      <table class="table mess-table mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Session</th>
+            <th>Meal</th>
+            <th>Status</th>
+            <th>Source</th>
+            <th class="text-end">₹</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td class="small fw-semibold">{{ b.date|date:"d M Y" }}</td>
+            <td class="small">
+              {% if b.meal_session == 'breakfast' %}🌅
+              {% elif b.meal_session == 'lunch' %}☀️
+              {% else %}🌙{% endif %}
+              {{ b.get_meal_session_display }}
+            </td>
+            <td>
+              <span class="badge rounded-pill
+                {% if b.meal_type == 'veg' %}badge-veg
+                {% elif b.meal_type == 'nonveg' %}badge-nonveg
+                {% else %}badge-skip{% endif %}">
+                {{ b.get_meal_type_display }}
+              </span>
+            </td>
+            <td>
+              <span class="badge rounded-pill
+                {% if b.status == 'attended' %}bg-success
+                {% elif b.status == 'cancelled' %}bg-secondary
+                {% elif b.status == 'missed' %}bg-warning text-dark
+                {% else %}bg-primary{% endif %}">
+                {{ b.status|title }}
+              </span>
+            </td>
+            <td class="small text-muted">{{ b.source }}</td>
+            <td class="text-end small {% if b.is_billable %}fw-semibold{% else %}text-muted{% endif %}">
+              {% if b.is_billable %}₹{{ b.price_snapshot|floatformat:2 }}{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot style="background:#fff3e0;">
+          <tr>
+            <td colspan="5" class="fw-bold text-end" style="color:#e65100;">
+              Total Billed:
+            </td>
+            <td class="text-end fw-bold" style="color:#e65100;">
+              ₹{{ total_billed|floatformat:2 }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      <div style="font-size:3rem;">📋</div>
+      <p class="mt-2">No meal records for this period.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register – Smart Mess</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+body { background:linear-gradient(135deg,#bf360c,#e65100,#ff8f00); min-height:100vh; padding:2rem 1rem; }
+.reg-card { max-width:520px; margin:0 auto; background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 16px 48px rgba(0,0,0,.25); }
+.reg-header { background:linear-gradient(135deg,#e65100,#ff8f00); padding:1.8rem; text-align:center; color:#fff; }
+.reg-body { padding:1.8rem; }
+.form-control { border-radius:10px; border:2px solid #e0e0e0; }
+.form-control:focus { border-color:#e65100; box-shadow:0 0 0 3px rgba(230,81,0,.1); }
+.role-pick { cursor:pointer; border:2px solid #dee2e6; border-radius:12px; background:#f8f9fa; padding:.8rem .5rem; text-align:center; transition:all .2s; }
+.btn-submit { background:linear-gradient(90deg,#e65100,#ff8f00); color:#fff; border:none; border-radius:12px; padding:.85rem; font-weight:800; font-size:1rem; width:100%; }
+</style>
+</head>
+<body>
+<div class="reg-card">
+  <div class="reg-header">
+    <div style="font-size:2.5rem;">📝</div>
+    <h4 class="fw-bold mt-1 mb-0">New Registration</h4>
+    <p class="mb-0" style="opacity:.8;font-size:.88rem;">Choose your role and fill in your details</p>
+  </div>
+  <div class="reg-body">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert py-2 small mb-3"
+             style="background:#e8f5e9;color:#2e7d32;border-radius:10px;border:none;">
+          <i class="fas fa-check-circle me-1"></i>{{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Role Selector -->
+    <div class="mb-3">
+      <label class="form-label fw-bold small">Select Your Role *</label>
+      <div class="row g-2" id="role-selector">
+        <div class="col-4">
+          <div class="role-pick" id="pick-student" onclick="pickRole('student')">
+            <div style="font-size:1.8rem;">🎓</div>
+            <div class="fw-bold small" style="color:#1565c0;">Student</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="role-pick" id="pick-staff" onclick="pickRole('staff')">
+            <div style="font-size:1.8rem;">🧑‍🍳</div>
+            <div class="fw-bold small" style="color:#2e7d32;">Staff</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="role-pick" id="pick-admin" onclick="pickRole('admin')">
+            <div style="font-size:1.8rem;">🧑‍💼</div>
+            <div class="fw-bold small" style="color:#e65100;">Admin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="role" id="role-input" value="student">
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="form-label small fw-semibold">First Name *</label>
+          <input type="text" name="first_name" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Last Name *</label>
+          <input type="text" name="last_name" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Username *</label>
+          <input type="text" name="username" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Email *</label>
+          <input type="email" name="email" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Phone</label>
+          <input type="text" name="phone" class="form-control form-control-sm">
+        </div>
+
+        <!-- Student-only fields -->
+        <div id="student-fields" class="col-12">
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Roll Number *</label>
+              <input type="text" name="roll_number" class="form-control form-control-sm" placeholder="e.g. CS2021001">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Year</label>
+              <input type="number" name="year_of_study" class="form-control form-control-sm" min="1" max="6">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Department</label>
+              <input type="text" name="department" class="form-control form-control-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Password *</label>
+          <input type="password" name="password1" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Confirm *</label>
+          <input type="password" name="password2" class="form-control form-control-sm" required>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit mt-3">
+        <i class="fas fa-paper-plane me-2"></i>Submit Registration
+      </button>
+    </form>
+
+    <p class="text-center text-muted small mt-3 mb-0">
+      Already have an account?
+      <a href="{% url 'login_choice' %}" style="color:#e65100;font-weight:600;">Login here</a>
+      &nbsp;|&nbsp;
+      <a href="{% url 'home' %}" style="color:#e65100;">← Home</a>
+    </p>
+  </div>
+</div>
+
+<script>
+const colours = { student:'#1565c0', staff:'#2e7d32', admin:'#e65100' };
+const bgs = { student:'#e3f2fd', staff:'#e8f5e9', admin:'#fff3e0' };
+function pickRole(role) {
+  ['student','staff','admin'].forEach(r => {
+    document.getElementById('pick-'+r).style.borderColor = '#dee2e6';
+    document.getElementById('pick-'+r).style.background  = '#f8f9fa';
+  });
+  document.getElementById('pick-'+role).style.borderColor = colours[role];
+  document.getElementById('pick-'+role).style.background  = bgs[role];
+  document.getElementById('role-input').value = role;
+  document.getElementById('student-fields').style.display = role==='student' ? '' : 'none';
+}
+pickRole('student');
+</script>
+</body>
+</html>

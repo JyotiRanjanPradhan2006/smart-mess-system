@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% block title %}Staff Dashboard{% endblock %}
+{% block page_title %}Mess Staff Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="row g-3 mb-3">
+  {% for s, data in meal_counts.items %}
+  <div class="col-md-4">
+    <div class="stat-card card p-3 text-center">
+      <div style="font-size:2rem;">
+        {% if s == 'breakfast' %}🌅{% elif s == 'lunch' %}☀️{% else %}🌙{% endif %}
+      </div>
+      <h6 class="fw-bold text-capitalize mt-1">{{ s }}</h6>
+      <div class="fw-bold fs-3" style="color:#e65100;">{{ data.count }}</div>
+      <div class="text-muted small">students booked</div>
+      {% if data.attended > 0 %}
+        <div class="text-success small">✅ {{ data.attended }} attended</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+
+  <!-- LEFT: QR Scanner + Menu Update -->
+  <div class="col-lg-5">
+
+    <!-- QR Scanner -->
+    <div class="card border-0 shadow-sm mb-3" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3 pb-2">
+        <h6 class="fw-bold mb-0"><i class="fas fa-qrcode me-2" style="color:#e65100;"></i>QR Scanner</h6>
+      </div>
+      <div class="card-body text-center">
+        <p class="text-muted small mb-3">Select session then scan student's mess card</p>
+        <div class="d-flex gap-2 justify-content-center mb-3">
+          {% for s, data in meal_counts.items %}
+          <label class="sess-btn px-3 py-2 rounded-3 fw-semibold"
+                 style="cursor:pointer;border:2px solid #dee2e6;background:#f8f9fa;font-size:.82rem;"
+                 id="sb-{{ s }}">
+            <input type="radio" name="session" value="{{ s }}" class="d-none"
+                   {% if s == 'lunch' %}checked{% endif %}
+                   onchange="setSess('{{ s }}')">
+            {% if s == 'breakfast' %}🌅{% elif s == 'lunch' %}☀️{% else %}🌙{% endif %}
+            {{ s|title }}
+          </label>
+          {% endfor %}
+        </div>
+        <input type="text" id="scan-input"
+               class="form-control mb-2" style="border:2px solid #e65100;border-radius:10px;"
+               placeholder="🔍 Scan QR or paste token..." autocomplete="off">
+        <button onclick="doScan()" class="btn w-100 fw-bold"
+                style="background:linear-gradient(90deg,#e65100,#ff8f00);color:#fff;border-radius:10px;">
+          <i class="fas fa-check-circle me-2"></i>Verify & Mark Attendance
+        </button>
+        <div id="scan-result" class="mt-2" style="display:none;"></div>
+        <a href="{% url 'scan_qr' %}" class="btn btn-sm btn-outline-secondary mt-2 w-100" style="border-radius:8px;">
+          Open Full Scanner Page
+        </a>
+      </div>
+    </div>
+
+    <!-- Update Today's Menu -->
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3 pb-2">
+        <h6 class="fw-bold mb-0"><i class="fas fa-utensils me-2" style="color:#e65100;"></i>Update Today's Menu</h6>
+        <small class="text-muted">Staff can update food items for today</small>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'staff_update_menu' %}">
+          {% csrf_token %}
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Session</label>
+            <select name="meal_session" class="form-select form-select-sm">
+              <option value="breakfast">🌅 Breakfast</option>
+              <option value="lunch" selected>☀️ Lunch</option>
+              <option value="dinner">🌙 Dinner</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">🟢 Veg Items</label>
+            <textarea name="veg_items" class="form-control form-control-sm" rows="2"
+              placeholder="e.g. Dal, Rice, Roti, Salad"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">🔴 Non-Veg Items</label>
+            <textarea name="nonveg_items" class="form-control form-control-sm" rows="2"
+              placeholder="e.g. Chicken Curry, Rice, Roti"></textarea>
+          </div>
+          <button type="submit" class="btn w-100 fw-bold btn-sm"
+                  style="background:#2e7d32;color:#fff;border-radius:8px;">
+            <i class="fas fa-save me-1"></i>Update Menu
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: All Student Bookings Today -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3 pb-2 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0">
+          <i class="fas fa-users me-2" style="color:#e65100;"></i>
+          All Student Bookings – {{ today }}
+        </h6>
+        <div class="d-flex gap-2">
+          <a href="{% url 'attendance_report' %}" class="btn btn-sm fw-semibold"
+             style="background:#fff3e0;color:#e65100;border-radius:8px;font-size:.75rem;">
+            📋 Full Report
+          </a>
+        </div>
+      </div>
+
+      <!-- Session filter tabs -->
+      <div class="px-3 pt-2 pb-0 d-flex gap-1">
+        <button class="btn btn-sm active-sess fw-semibold"
+                style="background:#e65100;color:#fff;border-radius:8px;font-size:.75rem;"
+                onclick="filterSess('all',this)">All</button>
+        <button class="btn btn-sm fw-semibold"
+                style="background:#f0f0f0;color:#555;border-radius:8px;font-size:.75rem;"
+                onclick="filterSess('breakfast',this)">🌅 Breakfast</button>
+        <button class="btn btn-sm fw-semibold"
+                style="background:#f0f0f0;color:#555;border-radius:8px;font-size:.75rem;"
+                onclick="filterSess('lunch',this)">☀️ Lunch</button>
+        <button class="btn btn-sm fw-semibold"
+                style="background:#f0f0f0;color:#555;border-radius:8px;font-size:.75rem;"
+                onclick="filterSess('dinner',this)">🌙 Dinner</button>
+      </div>
+
+      <div class="card-body p-0" style="max-height:480px;overflow-y:auto;">
+        {% if all_bookings %}
+        <table class="table table-sm mess-table mb-0" id="bookings-table">
+          <thead>
+            <tr>
+              <th>Student</th><th>Roll No.</th><th>Session</th>
+              <th>Meal</th><th>Status</th><th>₹</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in all_bookings %}
+            <tr class="booking-row" data-session="{{ b.meal_session }}">
+              <td class="fw-semibold small">{{ b.student.user.get_full_name }}</td>
+              <td>
+                <span class="badge bg-light text-dark border" style="font-size:.7rem;">
+                  {{ b.student.roll_number }}
+                </span>
+              </td>
+              <td class="small">
+                {% if b.meal_session == 'breakfast' %}🌅
+                {% elif b.meal_session == 'lunch' %}☀️
+                {% else %}🌙{% endif %}
+                {{ b.get_meal_session_display }}
+              </td>
+              <td>
+                <span class="badge rounded-pill
+                  {% if b.meal_type == 'veg' %}badge-veg
+                  {% elif b.meal_type == 'nonveg' %}badge-nonveg
+                  {% else %}badge-skip{% endif %}">
+                  {{ b.get_meal_type_display }}
+                </span>
+              </td>
+              <td>
+                <span class="badge rounded-pill
+                  {% if b.status == 'attended' %}bg-success
+                  {% elif b.status == 'cancelled' %}bg-secondary
+                  {% elif b.status == 'missed' %}bg-warning text-dark
+                  {% else %}bg-primary{% endif %}" style="font-size:.65rem;">
+                  {{ b.status|title }}
+                </span>
+              </td>
+              <td class="small fw-semibold" style="color:#e65100;">₹{{ b.price_snapshot }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center text-muted py-5">
+          <div style="font-size:2rem;">📋</div>
+          <p class="small mt-2">No bookings for today.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Session selector highlight
+function setSess(s) {
+  ['breakfast','lunch','dinner'].forEach(x => {
+    const el = document.getElementById('sb-'+x);
+    if(el) { el.style.borderColor='#dee2e6'; el.style.background='#f8f9fa'; }
+  });
+  const sel = document.getElementById('sb-'+s);
+  if(sel) { sel.style.borderColor='#e65100'; sel.style.background='#fff3e0'; }
+}
+setSess('lunch');
+
+// Auto-focus scan input
+document.getElementById('scan-input').focus();
+document.getElementById('scan-input').addEventListener('keydown', e => {
+  if(e.key === 'Enter') { e.preventDefault(); doScan(); }
+});
+
+async function doScan() {
+  const token   = document.getElementById('scan-input').value.trim();
+  const session = document.querySelector('input[name="session"]:checked')?.value || 'lunch';
+  if(!token) return;
+
+  try {
+    const resp = await fetch('{% url "process_scan" %}', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-CSRFToken':'{{ csrf_token }}' },
+      body: JSON.stringify({ token, session }),
+    });
+    const data = await resp.json();
+    const res  = document.getElementById('scan-result');
+    res.style.display = 'block';
+    const colours = {
+      valid:'#e8f5e9', blocked:'#ffebee', already_used:'#fff8e1',
+      not_booked:'#fff3e0', invalid:'#fce4ec', error:'#f5f5f5'
+    };
+    res.style.background    = colours[data.result] || '#f5f5f5';
+    res.style.borderRadius  = '10px';
+    res.style.padding       = '.6rem 1rem';
+    res.style.fontSize      = '.85rem';
+    res.style.fontWeight    = '600';
+    res.innerHTML = `${data.message}${data.name ? '<br><small style="font-weight:400">' + data.name + ' · ' + (data.roll||'') + '</small>' : ''}`;
+
+    document.getElementById('scan-input').value = '';
+    document.getElementById('scan-input').focus();
+    setTimeout(() => { res.style.display='none'; }, 5000);
+
+    // Reload page to update attendance counts
+    if(data.result === 'valid') setTimeout(() => location.reload(), 2000);
+  } catch(e) {
+    document.getElementById('scan-result').style.display = 'block';
+    document.getElementById('scan-result').textContent = '⚠️ Network error';
+  }
+}
+
+// Filter bookings by session
+function filterSess(sess, btn) {
+  document.querySelectorAll('.booking-row').forEach(row => {
+    row.style.display = (sess === 'all' || row.dataset.session === sess) ? '' : 'none';
+  });
+  document.querySelectorAll('.active-sess').forEach(b => {
+    b.style.background='#f0f0f0'; b.style.color='#555'; b.classList.remove('active-sess');
+  });
+  btn.style.background = '#e65100';
+  btn.style.color = '#fff';
+  btn.classList.add('active-sess');
+}
+</script>
+{% endblock %}

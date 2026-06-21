@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Daily Override{% endblock %}
+{% block page_title %}Daily Meal Override{% endblock %}
+
+{% block content %}
+<div class="alert py-2 mb-3 small border-0 d-flex align-items-center gap-2"
+     style="background:#fff3e0; color:#e65100; border-radius:12px;">
+  <i class="fas fa-clock"></i>
+  You can modify today's booking only before the deadline. Future bookings can be changed anytime.
+</div>
+
+<div class="row g-3">
+  {% for row in override_grid %}
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+
+      <div class="card-header border-0 pt-3 pb-0" style="background:#fafafa;">
+        <h6 class="fw-bold mb-0">
+          <i class="fas fa-calendar-day me-2" style="color:#e65100;"></i>
+          {{ row.date|date:"l, d M Y" }}
+          {% if row.is_today %}
+            <span class="badge bg-primary ms-2 small">Today</span>
+          {% endif %}
+        </h6>
+      </div>
+
+      <div class="card-body">
+        {% for slot in row.sessions %}
+        <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded-3"
+             style="background:#f8f9fa;">
+          <div>
+            <span class="fw-semibold small">
+              {% if slot.session == 'breakfast' %}🌅
+              {% elif slot.session == 'lunch' %}☀️
+              {% else %}🌙{% endif %}
+              {{ slot.session_label }}
+            </span>
+            {% if slot.booking %}
+              <span class="ms-2 badge rounded-pill
+                {% if slot.current_type == 'veg' %}badge-veg
+                {% elif slot.current_type == 'nonveg' %}badge-nonveg
+                {% else %}badge-skip{% endif %}">
+                {{ slot.booking.get_meal_type_display }}
+              </span>
+            {% else %}
+              <span class="ms-2 badge rounded-pill badge-skip">Not Booked</span>
+            {% endif %}
+          </div>
+
+          <form method="post" class="d-flex gap-1 align-items-center">
+            {% csrf_token %}
+            <input type="hidden" name="date"    value="{{ row.date|date:'Y-m-d' }}">
+            <input type="hidden" name="session" value="{{ slot.session }}">
+            <select name="meal_type" class="form-select form-select-sm"
+                    style="width:auto; font-size:.8rem;">
+              {% for choice in slot.allowed %}
+                <option value="{{ choice }}"
+                  {% if choice == slot.current_type %}selected{% endif %}>
+                  {% if choice == 'veg' %}🟢 Veg
+                  {% elif choice == 'nonveg' %}🔴 Non-Veg
+                  {% else %}⏭ Skip{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm fw-semibold"
+                    style="background:#e65100; color:#fff; border-radius:8px; white-space:nowrap;">
+              Update
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm p-4 text-center text-muted" style="border-radius:16px;">
+      <div style="font-size:3rem;">📅</div>
+      <p class="mt-2">No upcoming dates found. Please set your weekly schedule first.</p>
+      <a href="{% url 'weekly_schedule' %}" class="btn btn-primary mt-2">Set Weekly Schedule</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

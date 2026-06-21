@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard – Smart Mess{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+.week-table { width:100%; border-collapse:collapse; }
+.week-table thead th {
+  background:linear-gradient(90deg,#e65100,#ff8f00);
+  color:#fff; font-size:.75rem; text-transform:uppercase;
+  letter-spacing:.5px; padding:.6rem .8rem; text-align:center;
+}
+.week-table thead th:first-child { text-align:left; min-width:75px; }
+.week-table tbody td {
+  padding:.6rem .8rem; vertical-align:top;
+  border-bottom:1px solid #f0f0f0;
+}
+.week-table tbody tr:hover td { background:#fffdf7; }
+.today-row td { background:#fff8f0 !important; }
+.today-row td:first-child { border-left:4px solid #e65100; }
+
+.day-name  { font-weight:800; color:#e65100; font-size:.9rem; }
+.day-date  { color:#aaa; font-size:.65rem; }
+
+/* Meal cell */
+.meal-cell { min-width:130px; }
+
+/* Veg block */
+.veg-block {
+  background:#f1faf3; border:1px solid #c8e6c9;
+  border-radius:8px; padding:.35rem .6rem; margin-bottom:.35rem;
+}
+.veg-block .veg-label {
+  font-size:.72rem; font-weight:800; color:#2e7d32;
+  display:flex; align-items:center; gap:.3rem;
+}
+.veg-block .food-items {
+  font-size:.68rem; color:#4a7c59; margin-top:2px; line-height:1.5;
+}
+
+/* Nonveg block */
+.nonveg-block {
+  background:#fdf1f4; border:1px solid #f8bbd0;
+  border-radius:8px; padding:.35rem .6rem; margin-bottom:.35rem;
+}
+.nonveg-block .nonveg-label {
+  font-size:.72rem; font-weight:800; color:#880e4f;
+  display:flex; align-items:center; gap:.3rem;
+}
+.nonveg-block .food-items {
+  font-size:.68rem; color:#7b3a52; margin-top:2px; line-height:1.5;
+}
+
+/* Student booking indicator */
+.booked-indicator {
+  font-size:.68rem; font-weight:700; padding:.12rem .5rem;
+  border-radius:20px; display:inline-flex; align-items:center; gap:.3rem;
+  margin-top:.3rem;
+}
+.bi-veg    { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+.bi-nonveg { background:#fce4ec; color:#880e4f; border:1px solid #f48fb1; }
+.bi-skip   { background:#f5f5f5; color:#9e9e9e; border:1px solid #e0e0e0; }
+
+.price-tag { font-size:.7rem; color:#e65100; font-weight:700; }
+
+/* Status dot */
+.sd { width:7px; height:7px; border-radius:50%; display:inline-block; }
+.sd-attended  { background:#2e7d32; }
+.sd-booked    { background:#1565c0; }
+.sd-cancelled { background:#9e9e9e; }
+.sd-missed    { background:#e65100; }
+
+/* View only note */
+.view-only-note {
+  font-size:.68rem; color:#999; font-style:italic;
+  text-align:center; padding:.3rem;
+  background:#fafafa; border-top:1px solid #f0f0f0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card card p-3">
+      <div class="d-flex align-items-center gap-2">
+        <div style="font-size:1.5rem;">💰</div>
+        <div>
+          <div class="text-muted small">Pending</div>
+          <div class="fw-bold {% if is_blocked %}text-danger{% elif is_warning %}text-warning{% else %}text-dark{% endif %}">
+            ₹{{ profile.pending_amount|floatformat:2 }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card card p-3">
+      <div class="d-flex align-items-center gap-2">
+        <div style="font-size:1.5rem;">✅</div>
+        <div>
+          <div class="text-muted small">Paid</div>
+          <div class="fw-bold text-success">₹{{ profile.paid_amount|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card card p-3">
+      <div class="d-flex align-items-center gap-2">
+        <div style="font-size:1.5rem;">📊</div>
+        <div>
+          <div class="text-muted small">This Month</div>
+          <div class="fw-bold">₹{{ current_month_bill.total_amount|default:"0.00"|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card card p-3">
+      <div class="d-flex align-items-center gap-2">
+        <div style="font-size:1.5rem;">{% if is_blocked %}🚫{% else %}✅{% endif %}</div>
+        <div>
+          <div class="text-muted small">Card</div>
+          <div class="fw-bold {% if is_blocked %}text-danger{% else %}text-success{% endif %}">
+            {% if is_blocked %}BLOCKED{% else %}ACTIVE{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+
+  <!-- LEFT: 7-Day Meal Plan with Veg/NonVeg food items -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm" style="border-radius:16px; overflow:hidden;">
+      <div class="card-header border-0 bg-white pt-3 pb-2 d-flex justify-content-between align-items-center">
+        <div>
+          <h6 class="fw-bold mb-0">
+            <i class="fas fa-utensils me-2" style="color:#e65100;"></i>
+            This Week's Meal Plan
+          </h6>
+          <small class="text-muted" style="font-size:.7rem;">
+            👁️ View only — to change your booking go to
+            <a href="{% url 'weekly_schedule' %}" style="color:#e65100;">Weekly Schedule</a>
+          </small>
+        </div>
+        <a href="{% url 'weekly_schedule' %}" class="btn btn-sm fw-semibold"
+           style="background:#e65100;color:#fff;border-radius:8px;font-size:.75rem;">
+          📅 Book / Change
+        </a>
+      </div>
+
+      <div class="card-body p-0" style="overflow-y:auto; max-height:480px;">
+        {% if week_plan %}
+        <table class="week-table">
+          <thead>
+            <tr>
+              <th>DAY</th>
+              <th class="meal-cell">🌅 BREAKFAST</th>
+              <th class="meal-cell">☀️ LUNCH</th>
+              <th class="meal-cell">🌙 DINNER</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for day in week_plan %}
+            <tr {% if day.is_today %}class="today-row"{% endif %}>
+
+              <!-- Day -->
+              <td>
+                <div class="day-name">{{ day.day_name }}</div>
+                <div class="day-date">{{ day.date_str }}</div>
+                {% if day.is_today %}
+                  <span class="badge mt-1"
+                    style="background:#e65100;color:#fff;font-size:.58rem;border-radius:5px;">
+                    Today
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Breakfast | Lunch | Dinner -->
+              {% for slot in day.slots %}
+              <td class="meal-cell">
+
+                <!-- Veg food block -->
+                {% if slot.has_veg %}
+                <div class="veg-block">
+                  <div class="veg-label">🟢 Vegetarian</div>
+                  {% if slot.veg_items %}
+                    <div class="food-items">{{ slot.veg_items }}</div>
+                  {% else %}
+                    <div class="food-items" style="color:#aaa;">Menu not set</div>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- NonVeg food block -->
+                {% if slot.has_nonveg %}
+                <div class="nonveg-block">
+                  <div class="nonveg-label">🔴 Non-Vegetarian</div>
+                  {% if slot.nonveg_items %}
+                    <div class="food-items">{{ slot.nonveg_items }}</div>
+                  {% else %}
+                    <div class="food-items" style="color:#aaa;">Menu not set</div>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                {% if not slot.has_veg and not slot.has_nonveg %}
+                  <span style="color:#ddd;font-size:.72rem;">Not Available</span>
+                {% endif %}
+
+
+
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="background:#fff3e0;">
+              <td colspan="4" class="py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span style="font-size:.72rem; color:#888;">
+                    <span class="sd sd-attended"></span> Attended &nbsp;
+                    <span class="sd sd-booked"></span> Booked &nbsp;
+                    <span class="sd sd-missed"></span> Missed
+                  </span>
+                  <strong style="color:#e65100;font-size:.82rem;">
+                    Weekly Total: ₹{{ weekly_total }}
+                  </strong>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="view-only-note">
+          👁️ This is a view-only menu. To book or change your meals →
+          <a href="{% url 'weekly_schedule' %}" style="color:#e65100;font-weight:600;">Weekly Schedule</a>
+          or
+          <a href="{% url 'daily_override' %}" style="color:#e65100;font-weight:600;">Daily Override</a>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+          <div style="font-size:2.5rem;">📅</div>
+          <p class="small mt-2 mb-2">No weekly schedule set yet.</p>
+          <a href="{% url 'weekly_schedule' %}" class="btn btn-sm"
+             style="background:#e65100;color:#fff;border-radius:8px;">
+            Set Weekly Schedule
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Upcoming Bookings -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3 pb-0 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0">
+          <i class="fas fa-calendar-week me-2" style="color:#e65100;"></i>
+          Upcoming Bookings
+        </h6>
+        <a href="{% url 'daily_override' %}" class="btn btn-sm"
+           style="background:#fff3e0;color:#e65100;border-radius:8px;font-size:.75rem;">
+          ✏️ Override
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% if upcoming %}
+        <div class="table-responsive">
+          <table class="table table-sm mb-0 mess-table">
+            <thead>
+              <tr><th>Date</th><th>Session</th><th>Meal</th><th>Status</th><th class="text-end">₹</th></tr>
+            </thead>
+            <tbody>
+              {% for b in upcoming %}
+              <tr>
+                <td class="small fw-semibold">
+                  {{ b.date|date:"D, d M" }}
+                  {% if b.date == today %}
+                    <span class="badge bg-primary ms-1" style="font-size:.6rem;">Today</span>
+                  {% endif %}
+                </td>
+                <td class="small">
+                  {% if b.meal_session == 'breakfast' %}🌅
+                  {% elif b.meal_session == 'lunch' %}☀️
+                  {% else %}🌙{% endif %}
+                  {{ b.get_meal_session_display }}
+                </td>
+                <td>
+                  <span class="badge rounded-pill
+                    {% if b.meal_type == 'veg' %}badge-veg
+                    {% elif b.meal_type == 'nonveg' %}badge-nonveg
+                    {% else %}badge-skip{% endif %}">
+                    {{ b.get_meal_type_display }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge rounded-pill
+                    {% if b.status == 'attended' %}bg-success
+                    {% elif b.status == 'cancelled' %}bg-secondary
+                    {% elif b.status == 'missed' %}bg-warning text-dark
+                    {% else %}bg-primary{% endif %}" style="font-size:.65rem;">
+                    {{ b.status|title }}
+                  </span>
+                </td>
+                <td class="text-end small fw-semibold">₹{{ b.price_snapshot }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <div style="font-size:2rem;">📅</div>
+          <p class="small mb-2 mt-1">No upcoming bookings.</p>
+          <a href="{% url 'weekly_schedule' %}" class="btn btn-sm btn-outline-primary">Set Schedule</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="col-12">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'weekly_schedule' %}" class="btn btn-sm fw-semibold"
+             style="background:#fff3e0;color:#e65100;border-radius:8px;">
+            <i class="fas fa-calendar-week me-1"></i>Weekly Schedule
+          </a>
+          <a href="{% url 'daily_override' %}" class="btn btn-sm fw-semibold"
+             style="background:#e8f5e9;color:#2e7d32;border-radius:8px;">
+            <i class="fas fa-edit me-1"></i>Daily Override
+          </a>
+          <a href="{% url 'billing_summary' %}" class="btn btn-sm fw-semibold"
+             style="background:#e3f2fd;color:#1565c0;border-radius:8px;">
+            <i class="fas fa-rupee-sign me-1"></i>Billing
+          </a>
+          <a href="{% url 'my_qr' %}" class="btn btn-sm fw-semibold"
+             style="background:#f3e5f5;color:#6a1b9a;border-radius:8px;">
+            <i class="fas fa-qrcode me-1"></i>My QR Card
+          </a>
+          <a href="{% url 'meal_history' %}" class="btn btn-sm fw-semibold"
+             style="background:#fce4ec;color:#880e4f;border-radius:8px;">
+            <i class="fas fa-history me-1"></i>Meal History
+          </a>
+          <a href="{% url 'notifications' %}" class="btn btn-sm fw-semibold"
+             style="background:#f5f5f5;color:#333;border-radius:8px;">
+            <i class="fas fa-bell me-1"></i>Notifications
+            {% if unread_notification_count > 0 %}
+              <span class="badge bg-danger ms-1" style="font-size:.6rem;">{{ unread_notification_count }}</span>
+            {% endif %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

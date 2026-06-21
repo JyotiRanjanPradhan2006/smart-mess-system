@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍽️ Smart Mess – Meal Scheduling & Billing</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Segoe UI',sans-serif; }
+
+/* ── Navbar ── */
+.top-nav {
+  position:fixed; top:0; left:0; right:0; z-index:999;
+  background:rgba(0,0,0,.25); backdrop-filter:blur(10px);
+  padding:.75rem 2rem;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.top-nav .brand { color:#fff; font-weight:800; font-size:1.1rem; text-decoration:none; }
+.top-nav .nav-btns { display:flex; gap:.75rem; }
+.btn-nav-login {
+  background:rgba(255,255,255,.2); color:#fff;
+  border:2px solid rgba(255,255,255,.5);
+  padding:.45rem 1.4rem; border-radius:50px;
+  font-weight:700; font-size:.88rem; text-decoration:none;
+  transition:all .2s;
+}
+.btn-nav-login:hover { background:#fff; color:#e65100; }
+
+.btn-nav-register {
+  background:#fff; color:#e65100;
+  border:2px solid #fff;
+  padding:.45rem 1.4rem; border-radius:50px;
+  font-weight:700; font-size:.88rem; text-decoration:none;
+  transition:all .2s;
+}
+.btn-nav-register:hover { background:#e65100; color:#fff; border-color:#e65100; }
+
+/* ── Hero ── */
+.hero {
+  min-height:100vh;
+  background:linear-gradient(135deg,#bf360c 0%,#e65100 50%,#ff8f00 100%);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; padding:6rem 2rem 3rem;
+  position:relative; overflow:hidden;
+}
+.hero::before {
+  content:'';
+  position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-content { position:relative; z-index:1; max-width:620px; }
+.hero-icon { font-size:5rem; margin-bottom:1rem; }
+.hero h1 { font-size:3.2rem; font-weight:900; color:#fff; margin-bottom:.5rem; }
+.hero p  { font-size:1.1rem; color:rgba(255,255,255,.85); margin-bottom:2.5rem; line-height:1.7; }
+
+/* ── Hero CTA Buttons ── */
+.hero-btns { display:flex; flex-wrap:wrap; gap:1rem; justify-content:center; margin-bottom:1.5rem; }
+.btn-hero-primary {
+  display:inline-flex; align-items:center; gap:.75rem;
+  background:#fff; color:#e65100;
+  padding:1rem 2.5rem; border-radius:50px;
+  font-size:1.1rem; font-weight:800;
+  text-decoration:none;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);
+  transition:all .25s; border:none;
+}
+.btn-hero-primary:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,.35); color:#e65100; }
+
+.btn-hero-secondary {
+  display:inline-flex; align-items:center; gap:.75rem;
+  background:transparent; color:#fff;
+  padding:1rem 2.5rem; border-radius:50px;
+  font-size:1.1rem; font-weight:800;
+  text-decoration:none;
+  border:2.5px solid rgba(255,255,255,.7);
+  transition:all .25s;
+}
+.btn-hero-secondary:hover { background:rgba(255,255,255,.15); color:#fff; border-color:#fff; transform:translateY(-3px); }
+
+/* ── Role login quick buttons ── */
+.quick-login { display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center; }
+.ql-btn {
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.4rem 1rem; border-radius:20px; font-size:.82rem; font-weight:700;
+  text-decoration:none; transition:all .2s;
+}
+.ql-student { background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); }
+.ql-student:hover { background:#1565c0; color:#fff; border-color:#1565c0; }
+.ql-staff   { background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); }
+.ql-staff:hover   { background:#2e7d32; color:#fff; border-color:#2e7d32; }
+.ql-admin   { background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); }
+.ql-admin:hover   { background:#bf360c; color:#fff; border-color:#bf360c; }
+
+/* ── Features ── */
+.features { padding:4rem 2rem; background:#fff; }
+.feature-card {
+  text-align:center; padding:2rem 1.5rem;
+  border-radius:16px; background:#fff;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+  height:100%; transition:transform .2s;
+}
+.feature-card:hover { transform:translateY(-5px); }
+.feature-icon { font-size:2.5rem; margin-bottom:1rem; }
+.feature-card h5 { font-weight:700; color:#e65100; margin-bottom:.5rem; }
+.feature-card p  { font-size:.9rem; color:#666; }
+
+/* ── Roles ── */
+.roles-section { padding:3rem 2rem; background:#fff3e0; }
+.role-card { border-radius:20px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.1); transition:transform .2s; }
+.role-card:hover { transform:translateY(-4px); }
+.role-header { padding:2rem; text-align:center; color:#fff; }
+.role-header.student { background:linear-gradient(135deg,#1565c0,#1976d2); }
+.role-header.staff   { background:linear-gradient(135deg,#2e7d32,#388e3c); }
+.role-header.admin   { background:linear-gradient(135deg,#bf360c,#e65100); }
+.role-icon { font-size:3rem; margin-bottom:.5rem; }
+.role-body { padding:1.5rem; background:#fff; }
+.role-body ul { padding-left:1.2rem; }
+.role-body li { font-size:.88rem; color:#555; margin-bottom:.4rem; }
+.role-login-btn {
+  display:block; text-align:center; padding:.8rem;
+  border-radius:12px; font-weight:800; text-decoration:none;
+  margin-top:1rem; font-size:.95rem; transition:all .2s;
+}
+.role-login-btn.student { background:#1565c0; color:#fff; }
+.role-login-btn.student:hover { background:#0d47a1; color:#fff; }
+.role-login-btn.staff   { background:#2e7d32; color:#fff; }
+.role-login-btn.staff:hover   { background:#1b5e20; color:#fff; }
+.role-login-btn.admin   { background:#e65100; color:#fff; }
+.role-login-btn.admin:hover   { background:#bf360c; color:#fff; }
+
+footer { background:#1a1a1a; color:#aaa; text-align:center; padding:1.5rem; font-size:.85rem; }
+</style>
+</head>
+<body>
+
+<!-- Fixed Navbar -->
+<nav class="top-nav">
+  <a href="{% url 'home' %}" class="brand">🍽️ Smart Mess</a>
+  <div class="nav-btns">
+    <a href="{% url 'login_choice' %}" class="btn-nav-login">
+      <i class="fas fa-sign-in-alt me-1"></i>Login
+    </a>
+    <a href="{% url 'register' %}" class="btn-nav-register">
+      <i class="fas fa-user-plus me-1"></i>Register
+    </a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-icon">🍽️</div>
+    <h1>Smart Mess</h1>
+    <p>Complete Meal Scheduling, QR Attendance &amp; Billing System<br>for Hostels &amp; Colleges</p>
+
+    <div class="hero-btns">
+      <a href="{% url 'login_choice' %}" class="btn-hero-primary">
+        <i class="fas fa-sign-in-alt"></i> Login to Your Account
+      </a>
+      <a href="{% url 'register' %}" class="btn-hero-secondary">
+        <i class="fas fa-user-plus"></i> Register as Student
+      </a>
+    </div>
+
+    <div class="quick-login">
+      <span style="color:rgba(255,255,255,.6);font-size:.8rem;align-self:center;">Quick Login:</span>
+      <a href="{% url 'login_choice' %}?role=student" class="ql-btn ql-student">
+        🎓 Student
+      </a>
+      <a href="{% url 'login_choice' %}?role=staff" class="ql-btn ql-staff">
+        🧑‍🍳 Mess Staff
+      </a>
+      <a href="{% url 'login_choice' %}?role=admin" class="ql-btn ql-admin">
+        🧑‍💼 Admin
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="features">
+  <div class="container">
+    <h2 class="text-center fw-bold mb-2" style="color:#e65100;">Everything You Need</h2>
+    <p class="text-center text-muted mb-4">A complete mess management solution</p>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h5>Smart Scheduling</h5>
+          <p>Set weekly meal plans. System auto-generates daily bookings for 4 weeks ahead.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">📲</div>
+          <h5>QR Attendance</h5>
+          <p>Static QR card per student. Staff scans → attendance marked instantly.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h5>Auto Billing</h5>
+          <p>Monthly bills auto-calculated. Card blocked on dues. Warning alerts sent.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">🥗</div>
+          <h5>Day-wise Menu</h5>
+          <p>Different veg &amp; non-veg food items for each day shown on student dashboard.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">🔔</div>
+          <h5>Notifications</h5>
+          <p>Instant alerts for menu changes, price updates, and payment warnings.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h5>Revenue Dashboard</h5>
+          <p>Monthly revenue charts, total dues, blocked cards — all in one view.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Role Cards -->
+<div class="roles-section">
+  <div class="container">
+    <h2 class="text-center fw-bold mb-2" style="color:#e65100;">Login As</h2>
+    <p class="text-center text-muted mb-4">Choose your role to get started</p>
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <div class="role-card">
+          <div class="role-header student">
+            <div class="role-icon">🎓</div>
+            <h4 class="fw-800">Student</h4>
+          </div>
+          <div class="role-body">
+            <ul>
+              <li>View daily menu (Veg &amp; Non-Veg)</li>
+              <li>Set weekly meal schedule</li>
+              <li>View &amp; download QR mess card</li>
+              <li>Check billing &amp; payment history</li>
+              <li>Get instant notifications</li>
+            </ul>
+            <a href="{% url 'login_choice' %}?role=student" class="role-login-btn student">
+              <i class="fas fa-sign-in-alt me-2"></i>Student Login
+            </a>
+            <a href="{% url 'register' %}" style="display:block;text-align:center;margin-top:.5rem;font-size:.82rem;color:#1565c0;">
+              New student? Register here →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="role-card">
+          <div class="role-header staff">
+            <div class="role-icon">🧑‍🍳</div>
+            <h4 class="fw-800">Mess Staff</h4>
+          </div>
+          <div class="role-body">
+            <ul>
+              <li>Scan student QR cards</li>
+              <li>Auto attendance marking</li>
+              <li>View all student bookings today</li>
+              <li>Update daily food menu items</li>
+              <li>View attendance reports</li>
+            </ul>
+            <a href="{% url 'login_choice' %}?role=staff" class="role-login-btn staff">
+              <i class="fas fa-sign-in-alt me-2"></i>Staff Login
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="role-card">
+          <div class="role-header admin">
+            <div class="role-icon">🧑‍💼</div>
+            <h4 class="fw-800">Admin</h4>
+          </div>
+          <div class="role-body">
+            <ul>
+              <li>Approve student registrations</li>
+              <li>Manage menu &amp; meal prices</li>
+              <li>Record student payments</li>
+              <li>View revenue analytics</li>
+              <li>Monitor blocked cards &amp; dues</li>
+            </ul>
+            <a href="{% url 'login_choice' %}?role=admin" class="role-login-btn admin">
+              <i class="fas fa-sign-in-alt me-2"></i>Admin Login
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>🍽️ Smart Mess Meal Scheduling &amp; Billing System · Built with Django</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

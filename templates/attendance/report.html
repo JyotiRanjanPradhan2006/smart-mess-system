@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Report{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm mb-3" style="border-radius:16px;">
+  <div class="card-body py-2">
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <label class="small fw-semibold mb-0">Date:</label>
+      <input type="date" name="date" value="{{ report_date }}" class="form-control form-control-sm" style="width:auto;">
+      <button class="btn btn-sm" style="background:#e65100;color:#fff;border-radius:8px;">View</button>
+    </form>
+  </div>
+</div>
+<div class="card border-0 shadow-sm" style="border-radius:16px;">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table mess-table mb-0">
+        <thead>
+          <tr><th>Time</th><th>Student</th><th>Session</th><th>Result</th><th>Scanned By</th></tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td class="small">{{ log.scanned_at|time:"H:i:s" }}</td>
+            <td class="small">
+              {% if log.booking %}{{ log.booking.student.user.get_full_name }} <span class="text-muted">({{ log.booking.student.roll_number }})</span>{% else %}—{% endif %}
+            </td>
+            <td class="small text-capitalize">{% if log.booking %}{{ log.booking.get_meal_session_display }}{% else %}—{% endif %}</td>
+            <td>
+              <span class="badge rounded-pill
+                {% if log.scan_result == 'valid' %}bg-success
+                {% elif log.scan_result == 'card_blocked' %}bg-danger
+                {% elif log.scan_result == 'already_used' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ log.get_scan_result_display }}
+              </span>
+            </td>
+            <td class="small text-muted">{{ log.scanned_by|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No scan records for {{ report_date }}.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

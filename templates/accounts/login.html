@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block auth_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #bf360c 0%, #e65100 50%, #ff8f00 100%);">
+  <div class="card shadow-lg border-0" style="width:100%; max-width:420px; border-radius:20px; overflow:hidden;">
+    <div class="text-center p-4" style="background: linear-gradient(135deg, #e65100, #ff8f00);">
+      <div style="font-size:3.5rem; line-height:1;">🍽️</div>
+      <h4 class="text-white fw-bold mt-2 mb-0">Smart Mess</h4>
+      <p class="text-white-50 small mb-0">Meal Scheduling & Billing System</p>
+    </div>
+    <div class="card-body p-4">
+      <h5 class="text-center mb-4 fw-semibold" style="color:#e65100;">Welcome Back</h5>
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-danger py-2 small">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Username</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fas fa-user text-muted"></i>
+            </span>
+            <input type="text" name="username" class="form-control border-start-0 ps-0"
+                   placeholder="Enter username" required>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Password</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fas fa-lock text-muted"></i>
+            </span>
+            <input type="password" name="password" class="form-control border-start-0 ps-0"
+                   placeholder="Enter password" required>
+          </div>
+        </div>
+        <button type="submit" class="btn w-100 fw-bold py-2"
+                style="background: linear-gradient(90deg,#e65100,#ff8f00); color:#fff; border-radius:10px;">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In
+        </button>
+      </form>
+      <hr class="my-3">
+      <p class="text-center text-muted small mb-0">
+        New student?
+        <a href="{% url 'register' %}" style="color:#e65100; font-weight:600;">Register here</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

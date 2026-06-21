@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}🍽️ Smart Mess{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root { --mess-primary:#e65100; --mess-dark:#bf360c; --mess-light:#fff3e0; }
+    body  { background:#f8f9fa; font-family:'Segoe UI',sans-serif; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      height:100vh; width:240px;
+      background:linear-gradient(180deg,#bf360c 0%,#e65100 55%,#ff8f00 100%);
+      position:fixed; top:0; left:0; z-index:100;
+      display:flex; flex-direction:column;
+      box-shadow:4px 0 15px rgba(0,0,0,.2);
+      transition:transform .3s;
+      overflow-y:auto; overflow-x:hidden;
+    }
+    .sidebar-brand {
+      padding:.8rem 1rem .6rem; color:#fff;
+      border-bottom:1px solid rgba(255,255,255,.2);
+      text-align:center; flex-shrink:0;
+    }
+    .sidebar-brand h5  { margin:0; font-weight:700; font-size:1rem; }
+    .sidebar-brand small { opacity:.75; font-size:.7rem; }
+
+    /* Login/Register/Home buttons */
+    .sidebar-auth {
+      padding:.5rem .7rem;
+      border-bottom:1px solid rgba(255,255,255,.15);
+      display:flex; gap:.4rem; flex-shrink:0;
+    }
+    .sidebar-auth a {
+      flex:1; text-align:center; border-radius:8px;
+      padding:.35rem .2rem; font-size:.7rem; font-weight:800;
+      text-decoration:none; transition:all .15s;
+    }
+    .sa-login    { background:rgba(255,255,255,.2); color:#fff; border:1.5px solid rgba(255,255,255,.4); }
+    .sa-login:hover { background:rgba(255,255,255,.35); color:#fff; }
+    .sa-register { background:#fff; color:#e65100; border:1.5px solid #fff; }
+    .sa-register:hover { background:#fff3e0; color:#e65100; }
+    .sa-home     { background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.3); }
+    .sa-home:hover { background:rgba(255,255,255,.25); color:#fff; }
+
+    /* Role badge in sidebar */
+    .role-badge-bar {
+      padding:.3rem .8rem; text-align:center;
+      border-bottom:1px solid rgba(255,255,255,.15);
+      flex-shrink:0;
+    }
+    .role-badge-bar span {
+      display:inline-block; padding:.2rem .8rem;
+      border-radius:20px; font-size:.7rem; font-weight:800;
+      letter-spacing:.3px; text-transform:uppercase;
+    }
+    .rb-student { background:#e3f2fd; color:#1565c0; }
+    .rb-staff   { background:#e8f5e9; color:#2e7d32; }
+    .rb-admin   { background:#fff3e0; color:#bf360c; }
+
+    .sidebar .nav-link {
+      color:rgba(255,255,255,.85); padding:.38rem .9rem;
+      border-radius:8px; margin:1px 7px;
+      font-size:.8rem; transition:all .2s;
+    }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background:rgba(255,255,255,.2); color:#fff;
+    }
+    .sidebar .nav-link i { width:18px; font-size:.85rem; }
+    .sidebar-section {
+      padding:.25rem .9rem .1rem; font-size:.62rem;
+      text-transform:uppercase; color:rgba(255,255,255,.45);
+      letter-spacing:1px; margin-top:.25rem;
+    }
+    .sidebar-footer {
+      padding:.6rem .9rem; margin-top:auto;
+      border-top:1px solid rgba(255,255,255,.2); flex-shrink:0;
+    }
+
+    /* ── Main ── */
+    .main-content { margin-left:240px; min-height:100vh; }
+    .topbar {
+      background:#fff; padding:.65rem 1.5rem;
+      border-bottom:1px solid #e9ecef;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:99;
+      box-shadow:0 2px 8px rgba(0,0,0,.06);
+    }
+    .page-content { padding:1.5rem; }
+
+    /* ── Cards ── */
+    .stat-card { border:none; border-radius:14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.07); transition:transform .2s; }
+    .stat-card:hover { transform:translateY(-3px); }
+    .mess-table th { background:#fff3e0; color:#bf360c; font-weight:600; font-size:.78rem; text-transform:uppercase; }
+    .badge-veg    { background:#e8f5e9; color:#2e7d32; }
+    .badge-nonveg { background:#fce4ec; color:#880e4f; }
+    .badge-skip   { background:#f5f5f5; color:#757575; }
+    .alert-bar  { background:linear-gradient(90deg,#c62828,#e53935); color:#fff; padding:.55rem 1.5rem; display:flex; align-items:center; gap:.75rem; font-size:.85rem; }
+    .warning-bar{ background:linear-gradient(90deg,#e65100,#ff8f00); color:#fff; padding:.55rem 1.5rem; display:flex; align-items:center; gap:.75rem; font-size:.85rem; }
+
+    @media(max-width:768px){
+      .sidebar { transform:translateX(-240px); }
+      .sidebar.open { transform:translateX(0); }
+      .main-content { margin-left:0; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" id="sidebar">
+
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div style="font-size:1.5rem;">🍽️</div>
+    <h5>Smart Mess</h5>
+    <small>Meal Scheduling & Billing</small>
+  </div>
+
+  <!-- Login / Register / Home -->
+  <div class="sidebar-auth">
+    <a href="{% url 'login_choice' %}" class="sa-login"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
+    <a href="{% url 'register' %}"     class="sa-register"><i class="fas fa-user-plus me-1"></i>Register</a>
+    <a href="{% url 'home' %}"         class="sa-home"><i class="fas fa-home me-1"></i>Home</a>
+  </div>
+
+  <!-- Role badge -->
+  <div class="role-badge-bar">
+    <span class="rb-{{ user.role }}">
+      {% if user.role == 'student' %}🎓 Student
+      {% elif user.role == 'staff' %}🧑‍🍳 Mess Staff
+      {% else %}🧑‍💼 Admin{% endif %}
+    </span>
+  </div>
+
+  <!-- Nav -->
+  <ul class="nav flex-column mt-1">
+    <li class="nav-item">
+      <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-home"></i> Dashboard
+      </a>
+    </li>
+
+    {% with role=user.role %}
+
+    {% if role == "student" %}
+      <div class="sidebar-section">Meals</div>
+      <li class="nav-item"><a href="{% url 'weekly_schedule' %}" class="nav-link {% if request.resolver_match.url_name == 'weekly_schedule' %}active{% endif %}"><i class="fas fa-calendar-week"></i> Weekly Schedule</a></li>
+      <li class="nav-item"><a href="{% url 'daily_override' %}" class="nav-link {% if request.resolver_match.url_name == 'daily_override' %}active{% endif %}"><i class="fas fa-edit"></i> Daily Override</a></li>
+      <li class="nav-item"><a href="{% url 'meal_history' %}" class="nav-link {% if request.resolver_match.url_name == 'meal_history' %}active{% endif %}"><i class="fas fa-history"></i> Meal History</a></li>
+      <div class="sidebar-section">Account</div>
+      <li class="nav-item"><a href="{% url 'billing_summary' %}" class="nav-link {% if request.resolver_match.url_name == 'billing_summary' %}active{% endif %}"><i class="fas fa-rupee-sign"></i> Billing</a></li>
+      <li class="nav-item"><a href="{% url 'my_qr' %}" class="nav-link {% if request.resolver_match.url_name == 'my_qr' %}active{% endif %}"><i class="fas fa-qrcode"></i> My QR Card</a></li>
+      <li class="nav-item">
+        <a href="{% url 'notifications' %}" class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+          <i class="fas fa-bell"></i> Notifications
+          {% if unread_notification_count > 0 %}<span class="badge bg-danger ms-1" style="font-size:.6rem;">{{ unread_notification_count }}</span>{% endif %}
+        </a>
+      </li>
+    {% endif %}
+
+    {% if role == "staff" %}
+      <div class="sidebar-section">Attendance</div>
+      <li class="nav-item"><a href="{% url 'scan_qr' %}" class="nav-link {% if request.resolver_match.url_name == 'scan_qr' %}active{% endif %}"><i class="fas fa-qrcode"></i> Scan QR</a></li>
+      <li class="nav-item"><a href="{% url 'attendance_report' %}" class="nav-link {% if request.resolver_match.url_name == 'attendance_report' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Attendance Report</a></li>
+      <div class="sidebar-section">Menu</div>
+      <li class="nav-item"><a href="{% url 'menu_management' %}" class="nav-link {% if request.resolver_match.url_name == 'menu_management' %}active{% endif %}"><i class="fas fa-utensils"></i> Update Menu</a></li>
+    {% endif %}
+
+    {% if role == "admin" %}
+      <div class="sidebar-section">Students</div>
+      <li class="nav-item"><a href="{% url 'approve_students' %}" class="nav-link {% if request.resolver_match.url_name == 'approve_students' %}active{% endif %}"><i class="fas fa-user-check"></i> Approve Users</a></li>
+      <li class="nav-item"><a href="{% url 'student_list' %}" class="nav-link {% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="fas fa-users"></i> All Students</a></li>
+      <div class="sidebar-section">Operations</div>
+      <li class="nav-item"><a href="{% url 'menu_management' %}" class="nav-link {% if request.resolver_match.url_name == 'menu_management' %}active{% endif %}"><i class="fas fa-utensils"></i> Menu & Prices</a></li>
+      <li class="nav-item"><a href="{% url 'scan_qr' %}" class="nav-link {% if request.resolver_match.url_name == 'scan_qr' %}active{% endif %}"><i class="fas fa-qrcode"></i> Scan QR</a></li>
+      <li class="nav-item"><a href="{% url 'attendance_report' %}" class="nav-link {% if request.resolver_match.url_name == 'attendance_report' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Attendance</a></li>
+      <div class="sidebar-section">Finance</div>
+      <li class="nav-item"><a href="{% url 'admin_billing' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_billing' %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Billing</a></li>
+      <li class="nav-item"><a href="{% url 'revenue_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'revenue_dashboard' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Revenue</a></li>
+      <div class="sidebar-section">System</div>
+      <li class="nav-item"><a href="/admin/" class="nav-link"><i class="fas fa-cog"></i> System Admin</a></li>
+    {% endif %}
+
+    {% endwith %}
+  </ul>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <div style="color:rgba(255,255,255,.65);font-size:.72rem;margin-bottom:.3rem;">
+      <i class="fas fa-user-circle me-1"></i>
+      {{ user.get_full_name|default:user.username }}
+    </div>
+    <a href="{% url 'logout' %}" style="color:rgba(255,255,255,.75);font-size:.78rem;text-decoration:none;">
+      <i class="fas fa-sign-out-alt me-1"></i>Logout
+    </a>
+  </div>
+
+</nav>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-sm d-md-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h6 class="mb-0 text-muted fw-semibold">{% block page_title %}Dashboard{% endblock %}</h6>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      {% if user.role == 'student' and user.student_profile %}
+        {% if user.student_profile.card_status == 'blocked' %}
+          <span class="badge bg-danger">🚫 Card Blocked</span>
+        {% elif user.student_profile.is_warning_threshold_reached %}
+          <span class="badge bg-warning text-dark">⚠️ Warning</span>
+        {% else %}
+          <span class="badge bg-success">✅ Active</span>
+        {% endif %}
+      {% endif %}
+      {% if user.role == 'staff' %}
+        <span class="badge bg-success">🧑‍🍳 Staff</span>
+      {% endif %}
+      {% if user.role == 'admin' %}
+        <span class="badge" style="background:#e65100;color:#fff;">🧑‍💼 Admin</span>
+      {% endif %}
+      <span class="text-muted small"><i class="fas fa-calendar-alt me-1"></i><span id="live-date"></span></span>
+    </div>
+  </div>
+
+  {% if user.role == 'student' %}
+    {% with profile=user.student_profile %}
+      {% if profile.card_status == 'blocked' %}
+        <div class="alert-bar"><i class="fas fa-ban"></i><strong>Card BLOCKED!</strong> Pending ₹{{ profile.pending_amount }} exceeds limit. Contact admin.</div>
+      {% elif profile.is_warning_threshold_reached %}
+        <div class="warning-bar"><i class="fas fa-exclamation-triangle"></i><strong>Warning:</strong> Pending ₹{{ profile.pending_amount }} nearing limit.</div>
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+
+  {% if messages %}
+    <div class="px-3 pt-2">
+      {% for msg in messages %}
+        <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags|default:'info' }}{% endif %} alert-dismissible fade show py-2 small">
+          {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="page-content">{% block content %}{% endblock %}</div>
+</div>
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function updateDate(){
+    document.getElementById('live-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  }
+  updateDate(); setInterval(updateDate, 60000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

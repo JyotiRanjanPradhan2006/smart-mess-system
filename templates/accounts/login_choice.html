@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login – Smart Mess</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+body { background: linear-gradient(135deg,#bf360c,#e65100,#ff8f00); min-height:100vh;
+       display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+
+.login-wrapper { width:100%; max-width:480px; }
+
+.brand { text-align:center; color:#fff; margin-bottom:1.5rem; }
+.brand .icon { font-size:3rem; }
+.brand h2 { font-weight:800; margin:.3rem 0 .2rem; }
+.brand p  { opacity:.8; font-size:.9rem; }
+
+.choice-card {
+  background:#fff; border-radius:20px; overflow:hidden;
+  box-shadow:0 16px 48px rgba(0,0,0,.2);
+}
+
+.choice-tabs {
+  display:flex; background:#f8f9fa; border-bottom:1px solid #e0e0e0;
+}
+.choice-tab {
+  flex:1; padding:.9rem .5rem; text-align:center; cursor:pointer;
+  font-weight:700; font-size:.85rem; color:#999;
+  border:none; background:transparent; transition:all .2s;
+  border-bottom:3px solid transparent;
+}
+.choice-tab.active { color:#e65100; border-bottom-color:#e65100; background:#fff; }
+.choice-tab .tab-icon { font-size:1.3rem; display:block; margin-bottom:.2rem; }
+
+.login-panel { display:none; padding:1.8rem; }
+.login-panel.active { display:block; }
+
+.role-badge {
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.4rem 1rem; border-radius:20px; font-size:.8rem; font-weight:700;
+  margin-bottom:1.2rem;
+}
+.rb-student { background:#e3f2fd; color:#1565c0; }
+.rb-staff   { background:#e8f5e9; color:#2e7d32; }
+.rb-admin   { background:#fff3e0; color:#e65100; }
+
+.form-label { font-weight:600; font-size:.85rem; color:#555; }
+.form-control {
+  border-radius:10px; padding:.7rem 1rem; border:2px solid #e0e0e0;
+  font-size:.9rem; transition:border-color .2s;
+}
+.form-control:focus { border-color:#e65100; box-shadow:0 0 0 3px rgba(230,81,0,.1); }
+
+.btn-login {
+  width:100%; padding:.85rem; border-radius:12px; font-weight:800;
+  font-size:1rem; border:none; cursor:pointer; transition:all .2s;
+  color:#fff; margin-top:.5rem;
+}
+.btn-login.student { background:linear-gradient(90deg,#1565c0,#1976d2); }
+.btn-login.staff   { background:linear-gradient(90deg,#2e7d32,#388e3c); }
+.btn-login.admin   { background:linear-gradient(90deg,#bf360c,#e65100); }
+.btn-login:hover   { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.2); }
+
+.error-msg { background:#ffebee; color:#c62828; border-radius:10px; padding:.6rem 1rem;
+             font-size:.85rem; margin-bottom:.8rem; }
+
+.back-link { text-align:center; margin-top:1.2rem; }
+.back-link a { color:rgba(255,255,255,.8); text-decoration:none; font-size:.85rem; }
+.back-link a:hover { color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="login-wrapper">
+  <div class="brand">
+    <div class="icon">🍽️</div>
+    <h2>Smart Mess</h2>
+    <p>Select your role and sign in</p>
+  </div>
+
+  <div class="choice-card">
+    <!-- Tabs -->
+    <div class="choice-tabs">
+      <button class="choice-tab {% if role == 'student' or not role %}active{% endif %}"
+              onclick="showPanel('student')">
+        <span class="tab-icon">🎓</span>Student
+      </button>
+      <button class="choice-tab {% if role == 'staff' %}active{% endif %}"
+              onclick="showPanel('staff')">
+        <span class="tab-icon">🧑‍🍳</span>Staff
+      </button>
+      <button class="choice-tab {% if role == 'admin' %}active{% endif %}"
+              onclick="showPanel('admin')">
+        <span class="tab-icon">🧑‍💼</span>Admin
+      </button>
+    </div>
+
+    <!-- Student Login -->
+    <div class="login-panel {% if role == 'student' or not role %}active{% endif %}" id="panel-student">
+      <span class="role-badge rb-student"><i class="fas fa-graduation-cap"></i>Student Login</span>
+      {% if messages %}{% for msg in messages %}<div class="error-msg">{{ msg }}</div>{% endfor %}{% endif %}
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="role_hint" value="student">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Enter your username" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn-login student">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In as Student
+        </button>
+      </form>
+      <div class="text-center mt-3">
+        <small class="text-muted">New student? <a href="{% url 'register' %}" style="color:#1565c0;font-weight:600;">Register here</a></small>
+      </div>
+    </div>
+
+    <!-- Staff Login -->
+    <div class="login-panel {% if role == 'staff' %}active{% endif %}" id="panel-staff">
+      <span class="role-badge rb-staff"><i class="fas fa-utensils"></i>Mess Staff Login</span>
+      {% if messages %}{% for msg in messages %}<div class="error-msg">{{ msg }}</div>{% endfor %}{% endif %}
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="role_hint" value="staff">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Staff username" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn-login staff">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In as Staff
+        </button>
+      </form>
+    </div>
+
+    <!-- Admin Login -->
+    <div class="login-panel {% if role == 'admin' %}active{% endif %}" id="panel-admin">
+      <span class="role-badge rb-admin"><i class="fas fa-cog"></i>Admin Login</span>
+      {% if messages %}{% for msg in messages %}<div class="error-msg">{{ msg }}</div>{% endfor %}{% endif %}
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="role_hint" value="admin">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Admin username" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn-login admin">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In as Admin
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="{% url 'home' %}"><i class="fas fa-arrow-left me-1"></i>Back to Home</a>
+  </div>
+</div>
+
+<script>
+function showPanel(role) {
+  document.querySelectorAll('.choice-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + role).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// Auto-select tab from URL param
+const urlRole = new URLSearchParams(window.location.search).get('role');
+if(urlRole) showPanel(urlRole);
+</script>
+</body>
+</html>

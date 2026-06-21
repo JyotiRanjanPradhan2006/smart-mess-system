@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm" style="border-radius:16px;">
+  <div class="card-body p-0">
+    {% if notifications %}
+      {% for n in notifications %}
+      <div class="d-flex gap-3 p-3 border-bottom {% if not n.is_read %}fw-semibold{% endif %}"
+           style="{% if not n.is_read %}background:#fffdf7;{% endif %}">
+        <div style="font-size:1.5rem; width:40px; text-align:center; flex-shrink:0;">
+          {% if n.notif_type == 'menu_change' %}📋
+          {% elif n.notif_type == 'price_change' %}💰
+          {% elif n.notif_type == 'booking_cancelled' %}❌
+          {% elif n.notif_type == 'warning_pending' %}⚠️
+          {% elif n.notif_type == 'card_blocked' %}🚫
+          {% elif n.notif_type == 'card_unblocked' %}✅
+          {% elif n.notif_type == 'registration' %}🎉
+          {% else %}🔔{% endif %}
+        </div>
+        <div class="flex-grow-1">
+          <div>{{ n.message }}</div>
+          <div class="text-muted small mt-1">{{ n.created_at|timesince }} ago</div>
+        </div>
+        {% if not n.is_read %}
+          <div style="width:10px; height:10px; background:#e65100; border-radius:50%; margin-top:6px; flex-shrink:0;"></div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <div style="font-size:3rem;">🔔</div>
+        <p class="mt-2">No notifications yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

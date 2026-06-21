@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}Menu & Prices{% endblock %}
+{% block page_title %}Menu & Price Management{% endblock %}
+
+{% block content %}
+<div class="alert border-0 small py-2 mb-3" style="background:#fff3e0; color:#bf360c; border-radius:12px;">
+  <i class="fas fa-exclamation-triangle me-1"></i>
+  <strong>Warning:</strong> Updating menu or prices will automatically cancel all future bookings and reset all students' weekly schedules. Students will be notified.
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Update Menu -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3">
+        <h6 class="fw-bold mb-0"><i class="fas fa-utensils me-2" style="color:#e65100;"></i>Update Menu</h6>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_menu">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Effective Date *</label>
+            <input type="date" name="effective_date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Meal Session *</label>
+            <select name="meal_session" class="form-select">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+            </select>
+          </div>
+          <div class="mb-3 d-flex gap-3">
+            <div class="form-check">
+              <input type="checkbox" name="has_veg" id="has_veg" class="form-check-input" checked>
+              <label class="form-check-label" for="has_veg">🟢 Vegetarian</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" name="has_nonveg" id="has_nonveg" class="form-check-input">
+              <label class="form-check-label" for="has_nonveg">🔴 Non-Vegetarian</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">🟢 Veg Food Items</label>
+            <textarea name="veg_items" class="form-control" rows="2"
+              placeholder="e.g. Dal Makhani, Jeera Rice, Roti, Salad, Curd"></textarea>
+            <small class="text-muted">Shown to students under Vegetarian section</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">🔴 Non-Veg Food Items</label>
+            <textarea name="nonveg_items" class="form-control" rows="2"
+              placeholder="e.g. Chicken Curry, Rice, Roti, Raita"></textarea>
+            <small class="text-muted">Shown to students under Non-Vegetarian section</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">General Description (Optional)</label>
+            <textarea name="description" class="form-control" rows="1" placeholder="Any extra note..."></textarea>
+          </div>
+          <button type="submit" class="btn fw-bold w-100"
+                  style="background:linear-gradient(90deg,#e65100,#ff8f00); color:#fff; border-radius:10px;"
+                  onclick="return confirm('This will cancel all future bookings and notify students. Continue?')">
+            <i class="fas fa-save me-2"></i>Update Menu
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Price -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3">
+        <h6 class="fw-bold mb-0"><i class="fas fa-rupee-sign me-2" style="color:#e65100;"></i>Update Meal Price</h6>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_price">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Meal Type *</label>
+            <select name="meal_type" class="form-select">
+              <option value="veg">Vegetarian</option>
+              <option value="nonveg">Non-Vegetarian</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Session *</label>
+            <select name="meal_session" class="form-select">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Price (₹) *</label>
+            <input type="number" name="price" class="form-control" min="0" step="0.50" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Effective From *</label>
+            <input type="date" name="effective_from" class="form-control" required>
+          </div>
+          <button type="submit" class="btn fw-bold w-100"
+                  style="background:linear-gradient(90deg,#2e7d32,#43a047); color:#fff; border-radius:10px;"
+                  onclick="return confirm('This will cancel all future bookings and notify students. Continue?')">
+            <i class="fas fa-tags me-2"></i>Update Price
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Current menu & prices -->
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3">
+        <h6 class="fw-bold mb-0">Recent Menu Configurations</h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table mess-table mb-0">
+            <thead><tr><th>Date</th><th>Session</th><th>Veg</th><th>Non-Veg</th><th>Active</th></tr></thead>
+            <tbody>
+              {% for m in menus %}
+              <tr>
+                <td class="small">{{ m.effective_date }}</td>
+                <td class="small text-capitalize">{{ m.get_meal_session_display }}</td>
+                <td>{% if m.has_veg %}<span class="badge badge-veg">Yes</span>{% else %}—{% endif %}</td>
+                <td>{% if m.has_nonveg %}<span class="badge badge-nonveg">Yes</span>{% else %}—{% endif %}</td>
+                <td>{% if m.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Off</span>{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+      <div class="card-header border-0 bg-white pt-3">
+        <h6 class="fw-bold mb-0">Current Prices</h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table mess-table mb-0">
+            <thead><tr><th>Type</th><th>Session</th><th class="text-end">Price</th><th>From</th></tr></thead>
+            <tbody>
+              {% for p in prices %}
+              <tr>
+                <td>
+                  <span class="badge {% if p.meal_type == 'veg' %}badge-veg{% else %}badge-nonveg{% endif %}">
+                    {{ p.get_meal_type_display }}
+                  </span>
+                </td>
+                <td class="small text-capitalize">{{ p.get_meal_session_display }}</td>
+                <td class="text-end fw-semibold">₹{{ p.price }}</td>
+                <td class="small text-muted">{{ p.effective_from }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
