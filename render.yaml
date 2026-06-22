@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: smart-mess-system
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn mess_system.wsgi"
