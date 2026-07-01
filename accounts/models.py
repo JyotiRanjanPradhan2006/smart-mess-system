@@ -1,16 +1,15 @@
 """
-accounts/models.py — FIXED: QR stores full student data as JSON
+accounts/models.py — QR stored as base64 in database (works on Render free tier)
 """
 
 import uuid
 import json
 import qrcode
+import base64
 import os
 from io import BytesIO
-from django.core.files import File
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
 from django.utils import timezone
 
 
@@ -23,9 +22,9 @@ class User(AbstractUser):
     role  = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
     phone = models.CharField(max_length=15, blank=True)
 
-    def is_student(self):      return self.role == self.Role.STUDENT
-    def is_mess_staff(self):   return self.role == self.Role.STAFF
-    def is_admin_user(self):   return self.role == self.Role.ADMIN or self.is_staff
+    def is_student(self):    return self.role == self.Role.STUDENT
+    def is_mess_staff(self): return self.role == self.Role.STAFF
+    def is_admin_user(self): return self.role == self.Role.ADMIN or self.is_staff
 
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.role})"
@@ -48,8 +47,10 @@ class StudentProfile(models.Model):
     registration_status = models.CharField(max_length=10, choices=RegistrationStatus.choices, default=RegistrationStatus.PENDING)
     card_status         = models.CharField(max_length=10, choices=CardStatus.choices, default=CardStatus.ACTIVE)
 
-    qr_code   = models.ImageField(upload_to='qr_codes/', blank=True)
-    qr_token  = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    # QR stored as base64 string — survives server restarts & deploys
+    qr_code    = models.ImageField(upload_to='qr_codes/', blank=True)
+    qr_base64  = models.TextField(blank=True)  # base64 encoded QR image
+    qr_token   = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     pending_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     paid_amount    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -96,51 +97,38 @@ class StudentProfile(models.Model):
             self.save(update_fields=['card_status'])
 
     def get_qr_data(self):
-        """
-        Build the JSON payload stored INSIDE the QR code.
-        Contains token + all student identity info.
-        """
         return json.dumps({
-            "token":      str(self.qr_token),
-            "name":       self.user.get_full_name() or self.user.username,
-            "roll":       self.roll_number,
-            "dept":       self.department or "",
-            "year":       self.year_of_study or "",
-            "username":   self.user.username,
-            "phone":      self.user.phone or "",
-            "system":     "SmartMess",
+            "token":    str(self.qr_token),
+            "name":     self.user.get_full_name() or self.user.username,
+            "roll":     self.roll_number,
+            "dept":     self.department or "",
+            "year":     self.year_of_study or "",
+            "username": self.user.username,
+            "phone":    self.user.phone or "",
+            "system":   "SmartMess",
         }, separators=(',', ':'))
 
     def generate_qr(self):
-        """Generate QR with full student data encoded inside."""
-        qr_data = self.get_qr_data()
+        """Generate QR and store as base64 in database — no file needed."""
         qr = qrcode.QRCode(
             version=None,
             error_correction=qrcode.constants.ERROR_CORRECT_M,
             box_size=8,
             border=3,
         )
-        qr.add_data(qr_data)
+        qr.add_data(self.get_qr_data())
         qr.make(fit=True)
-        img = qr.make_image(fill='black', back_color='white')
+        img    = qr.make_image(fill='black', back_color='white')
         buffer = BytesIO()
         img.save(buffer, format='PNG')
-        filename = f"qr_{self.roll_number}.png"
-        self.qr_code.save(filename, File(buffer), save=False)
+        self.qr_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
     def regenerate_qr(self):
-        """Force regenerate QR (call after profile update)."""
-        if self.qr_code:
-            try:
-                os.remove(self.qr_code.path)
-            except Exception:
-                pass
-            self.qr_code = None
         self.generate_qr()
-        self.save(update_fields=['qr_code'])
+        self.save(update_fields=['qr_base64'])
 
     def save(self, *args, **kwargs):
-        if not self.qr_code:
+        if not self.qr_base64:
             self.generate_qr()
         super().save(*args, **kwargs)
 
